@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Playfair Display", serif;
+}
+
+body {
+  @apply transition-colors duration-500 font-sans;
+}
+
+.light body {
+  @apply bg-[#F4F7FA] text-[#1E293B];
+}
+
+.dark body {
+  @apply bg-[#0F172A] text-[#F1F5F9];
+}
+
+/* Soft UI / Glassmorphism Cards */
+@utility glass-card {
+  @apply backdrop-blur-xl border transition-all duration-300 rounded-[2.5rem] shadow-2xl;
+}
+
+.light .glass-card {
+  @apply bg-white/80 border-white/50 shadow-slate-200/60;
+}
+
+.dark .glass-card {
+  @apply bg-slate-900/70 border-slate-700/40 shadow-black/50;
+}
+
+/* Modern Buttons with Gradients & Effects */
+@utility btn-base {
+  @apply px-8 py-4 rounded-[1.25rem] font-bold transition-all duration-300 
+         hover:-translate-y-1 active:translate-y-0.5 
+         disabled:opacity-40 disabled:pointer-events-none
+         flex items-center justify-center gap-2 shadow-lg;
+}
+
+@utility btn-success {
+  @apply btn-base text-white bg-gradient-to-r from-emerald-500 to-teal-600 
+         hover:from-emerald-400 hover:to-teal-500 shadow-emerald-500/25;
+}
+
+@utility btn-warning {
+  @apply btn-base text-white bg-gradient-to-r from-amber-400 to-orange-500 
+         hover:from-amber-300 hover:to-orange-400 shadow-amber-500/25;
+}
+
+@utility btn-danger {
+  @apply btn-base text-white bg-gradient-to-r from-rose-500 to-red-600 
+         hover:from-rose-400 hover:to-red-500 shadow-rose-500/25;
+}
+
+@utility btn-primary {
+  @apply btn-base text-white bg-gradient-to-r from-indigo-600 to-violet-700 
+         hover:from-indigo-500 hover:to-violet-600 shadow-indigo-500/25;
+}
+
+@utility btn-neutral {
+  @apply btn-base border transition-colors;
+}
+
+.light .btn-neutral {
+  @apply bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-slate-200/50;
+}
+
+.dark .btn-neutral {
+  @apply bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 shadow-black/20;
+}
+
+@utility btn-icon {
+  @apply p-4 rounded-2xl glass-card hover:scale-110 active:scale-90 transition-all shadow-lg flex items-center justify-center;
+}
+
+/* Tabs / Part Filters */
+@utility tab-btn {
+  @apply px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 shadow-md hover:-translate-y-0.5;
+}
+
+.light .tab-btn-inactive {
+  @apply bg-white text-slate-500 border border-slate-100 hover:text-indigo-600 hover:border-indigo-200;
+}
+
+.dark .tab-btn-inactive {
+  @apply bg-slate-800/50 text-slate-400 border border-slate-700 hover:text-indigo-400 hover:border-indigo-800;
+}
+
+@utility tab-btn-active {
+  @apply bg-indigo-600 text-white shadow-indigo-500/30 ring-4 ring-indigo-500/10;
+}
+
+/* Soft Input Field */
+@utility soft-input {
+  @apply w-full bg-transparent border-b-2 py-3 outline-none transition-all duration-300 text-xl sm:text-2xl font-medium;
+}
+
+.light .soft-input {
+  @apply border-slate-200 focus:border-indigo-500 text-slate-800 placeholder:text-slate-300;
+}
+
+.dark .soft-input {
+  @apply border-slate-700 focus:border-indigo-400 text-slate-100 placeholder:text-slate-600;
+}
+
+/* Utilities */
+@utility text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600;
+}
+
+.dark .text-gradient {
+  @apply from-indigo-400 to-violet-400;
+}
