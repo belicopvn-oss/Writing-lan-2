@@ -14,8 +14,11 @@ import {
   Moon,
   RefreshCw,
   Lightbulb,
-  Check
+  Check,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 import { questions } from './data/questions';
 import { Question, QuizMode } from './types';
 
@@ -26,6 +29,9 @@ export default function App() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showFeedback, setShowFeedback] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [showAIExplanation, setShowAIExplanation] = useState(false);
+  const [aiExplanation, setAIExplanation] = useState<string | null>(null);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [filterPart, setFilterPart] = useState<string>('All');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -53,6 +59,8 @@ export default function App() {
       setCurrentIdx(prev => prev + 1);
       setShowFeedback(false);
       setShowHint(false);
+      setShowAIExplanation(false);
+      setAIExplanation(null);
     } else {
       setView('results');
     }
@@ -63,6 +71,8 @@ export default function App() {
       setCurrentIdx(prev => prev - 1);
       setShowFeedback(false);
       setShowHint(false);
+      setShowAIExplanation(false);
+      setAIExplanation(null);
     }
   };
 
@@ -70,6 +80,8 @@ export default function App() {
     setAnswers(prev => ({ ...prev, [currentQuestion.id]: '' }));
     setShowFeedback(false);
     setShowHint(false);
+    setShowAIExplanation(false);
+    setAIExplanation(null);
   };
 
   const checkAnswer = (user: string, correct: string) => {
@@ -89,6 +101,8 @@ export default function App() {
     setAnswers({});
     setShowFeedback(false);
     setShowHint(false);
+    setShowAIExplanation(false);
+    setAIExplanation(null);
     setView('quiz');
   };
 
@@ -231,6 +245,49 @@ export default function App() {
     );
   }
 
+  const fetchAIExplanation = async () => {
+    if (aiExplanation) {
+      setShowAIExplanation(true);
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    setShowAIExplanation(true);
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const prompt = `
+        Bạn là một giáo viên tiếng Anh chuyên nghiệp. 
+        Hãy giải thích cách làm câu bài tập biến đổi câu (Sentence Transformation) sau đây một cách ngắn gọn, dễ hiểu bằng tiếng Việt.
+        
+        Câu gốc: "${currentQuestion.original}"
+        Từ khóa bắt buộc: "${currentQuestion.keyword}"
+        Phần đầu câu gợi ý: "${currentQuestion.sentenceStart}"
+        Phần cuối câu gợi ý: "${currentQuestion.sentenceEnd}"
+        Đáp án đúng: "${currentQuestion.answer}"
+        
+        Yêu cầu giải thích:
+        1. Cấu trúc ngữ pháp được sử dụng.
+        2. Tại sao lại dùng cấu trúc đó trong ngữ cảnh này.
+        3. Các bước để đi đến đáp án.
+        
+        Hãy trình bày dưới dạng các ý gạch đầu dòng ngắn gọn.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+
+      setAIExplanation(response.text || "Không thể tạo hướng dẫn lúc này.");
+    } catch (error) {
+      console.error("AI Error:", error);
+      setAIExplanation("Có lỗi xảy ra khi kết nối với AI. Vui lòng thử lại sau.");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const isCorrect = checkAnswer(answers[currentQuestion.id] || '', currentQuestion.answer);
 
   return (
@@ -299,13 +356,22 @@ export default function App() {
                   <Lightbulb size={14} />
                   Từ khóa: {currentQuestion.keyword}
                 </div>
-                <button 
-                  onClick={() => setShowHint(true)}
-                  className="px-6 py-2 btn-warning !rounded-xl !py-2 !px-6 text-xs uppercase tracking-[0.2em] font-black"
-                >
-                  <Lightbulb size={14} />
-                  Gợi ý
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setShowHint(true)}
+                    className="px-6 py-2 btn-warning !rounded-xl !py-2 !px-6 text-xs uppercase tracking-[0.2em] font-black flex-1 sm:flex-none"
+                  >
+                    <Lightbulb size={14} />
+                    Gợi ý
+                  </button>
+                  <button 
+                    onClick={fetchAIExplanation}
+                    className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white !rounded-xl !py-2 !px-6 text-xs uppercase tracking-[0.2em] font-black flex items-center gap-2 shadow-xl shadow-indigo-500/20 transition-all active:scale-95 flex-1 sm:flex-none"
+                  >
+                    {isGeneratingAI ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                    AI Guide
+                  </button>
+                </div>
               </div>
               <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
             </div>
@@ -321,6 +387,31 @@ export default function App() {
                   <p className="text-sm font-medium opacity-60 italic">
                     Gợi ý: Bắt đầu bằng "<span className="font-bold text-amber-500">{currentQuestion.answer.split(' ')[0]}...</span>"
                   </p>
+                </motion.div>
+              )}
+              {showAIExplanation && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="w-full"
+                >
+                  <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/50 p-6 rounded-3xl space-y-4">
+                    <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-black text-xs uppercase tracking-widest">
+                      <Sparkles size={14} />
+                      <span>Hướng dẫn từ AI</span>
+                    </div>
+                    {isGeneratingAI ? (
+                      <div className="flex items-center gap-3 text-sm opacity-60 italic">
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Đang phân tích câu hỏi...</span>
+                      </div>
+                    ) : (
+                      <div className="text-sm leading-relaxed opacity-80 whitespace-pre-line">
+                        {aiExplanation}
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
